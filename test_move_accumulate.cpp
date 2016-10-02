@@ -84,11 +84,6 @@ public:
 
 int main(int argc, char** argv)
 {
-	// This makes lots of copies ...
-	//std::vector<thing> things = { "a" , "bb", "ccc" };
-	//
-	
-	// But, this doesn't...
 	std::vector<thing> things;
 	things.reserve(26);
 
@@ -98,7 +93,7 @@ int main(int argc, char** argv)
 
 	//auto out_thing = std::accumulate(things.begin(), things.end(), thing(),
 	auto out_thing = stlutil::move_accumulate(things.begin(), things.end(), thing(),
-			[](thing out, const thing& in_thing)
+		[](thing out, const thing& in_thing)
 		{
 			out.concat(in_thing);
 
