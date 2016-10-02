@@ -1,41 +1,56 @@
-#include "workspace/stlutil/move_accumulate.h"
+#include "move_accumulate.h"
 
 #include <iostream>
 #include <string>
 #include <vector>
 #include <numeric>
+#include <memory>
 
 class thing
 {
 private:
-	std::string m_string;
+	std::shared_ptr<size_t>	m_copy_count;
+	std::string 				m_string;
 
 public:
-	thing() = default;
+	//static size_t copy_count;
 
-	static size_t copy_count;
+	thing(const std::string& str)
+		: m_copy_count(new size_t) 
+		, m_string(str)
+	{
+	}
 
-	thing(const std::string& str) : m_string(str) { }
-	thing(const char* cstr) : m_string(cstr) { }
+	thing(const char* cstr)
+		: thing(std::string(cstr))
+	{
+	}
 
-	thing(size_t n, char c) : m_string(n, c) { }
+	thing(size_t n, char c)
+		: thing(std::string(n, c))
+	{
+	}
+
+	thing() : thing(std::string("")) { }
 
 	thing(const thing& rhs)
-		: m_string(rhs.m_string)
+		: m_copy_count(rhs.m_copy_count)
+		, m_string(rhs.m_string)
 	{
 		std::cout << "Copying thing: " << rhs.m_string << std::endl;
 
-		copy_count++;
+		(*m_copy_count)++;
 	}
 
 	thing& operator=(const thing& rhs)
 	{
 		std::cout << "Copy-assigning thing: " << rhs.m_string << std::endl;
+		m_copy_count = rhs.m_copy_count;
 		m_string = rhs.m_string;
 
 		return *this;
 
-		copy_count++;
+		(*m_copy_count)++;
 	}
 
 //	thing(thing&& rhs)
@@ -63,9 +78,9 @@ public:
 	{
 		m_string += t.str();
 	}
-};
 
-size_t thing::copy_count = 0;
+	size_t copy_count() const { return *m_copy_count; }
+};
 
 int main(int argc, char** argv)
 {
@@ -81,8 +96,8 @@ int main(int argc, char** argv)
 	for (int i = 0 ; i < 26 ; )
 		things.emplace_back(++i, c++);
 
-	auto out_thing = stlutil::move_accumulate(things.begin(), things.end(), thing(),
-	//auto out_thing = std::accumulate(things.begin(), things.end(), thing(),
+	//auto out_thing = stlutil::move_accumulate(things.begin(), things.end(), thing(),
+	auto out_thing = std::accumulate(things.begin(), things.end(), thing(),
 		[](thing out, const thing& in_thing)
 		{
 			out.concat(in_thing);
@@ -92,7 +107,7 @@ int main(int argc, char** argv)
 
 	std::cout << out_thing.str() << std::endl;
 
-	std::cout << "Made " << thing::copy_count << " copies" << std::endl;
+	std::cout << "Made " << out_thing.copy_count() << " copies" << std::endl;
 
 	for (const thing& t : things)
 		std::cout << t.str() << std::endl;
