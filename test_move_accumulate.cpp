@@ -19,6 +19,7 @@ public:
 		: m_copy_count(new size_t) 
 		, m_string(str)
 	{
+		*m_copy_count = 0;
 	}
 
 	thing(const char* cstr)
