@@ -13,8 +13,6 @@ private:
 	std::string 				m_string;
 
 public:
-	//static size_t copy_count;
-
 	thing(const std::string& str)
 		: m_copy_count(new size_t) 
 		, m_string(str)
@@ -38,14 +36,14 @@ public:
 		: m_copy_count(rhs.m_copy_count)
 		, m_string(rhs.m_string)
 	{
-		std::cout << "Copying thing: " << rhs.m_string << std::endl;
+		//std::cout << "Copying thing: " << rhs.m_string << std::endl;
 
 		(*m_copy_count)++;
 	}
 
 	thing& operator=(const thing& rhs)
 	{
-		std::cout << "Copy-assigning thing: " << rhs.m_string << std::endl;
+		//std::cout << "Copy-assigning thing: " << rhs.m_string << std::endl;
 		m_copy_count = rhs.m_copy_count;
 		m_string = rhs.m_string;
 
@@ -53,20 +51,6 @@ public:
 
 		return *this;
 	}
-
-//	thing(thing&& rhs)
-//		: m_string(std::move(rhs.m_string))
-//	{
-//		//std::cout << "Moved thing " << m_string << std::endl;
-//	}
-//
-//	thing& operator=(thing&& rhs)
-//	{
-//		m_string = std::move(rhs.m_string);
-//		//std::cout << "Move-assigned thing " << m_string << std::endl;
-//
-//		return *this;
-//	}
 
 	// If these aren't explicitly specified (or, implemented as above)
 	// then we'll get lots of copies with accumulate or move_accumulate
@@ -92,21 +76,21 @@ int main(int argc, char** argv)
 	for (int i = 0 ; i < 26 ; )
 		things.emplace_back(++i, c++);
 
-	//auto out_thing = std::accumulate(things.begin(), things.end(), thing(),
-	auto out_thing = stlutil::move_accumulate(things.begin(), things.end(), thing(),
+	auto thing_concat = 	
 		[](thing out, const thing& in_thing)
 		{
 			out.concat(in_thing);
 
 			return out;
-		});
+		};
 
-	std::cout << out_thing.str() << std::endl;
+	auto out_thing1 = stlutil::move_accumulate(things.begin(), things.end(), thing(), thing_concat);
+	auto out_thing2 = std::accumulate(things.begin(), things.end(), thing(), thing_concat);
 
-	std::cout << "Made " << out_thing.copy_count() << " copies" << std::endl;
-
-	for (const thing& t : things)
-		std::cout << t.str() << std::endl;
+	std::cout << "out_thing1: " << std::endl << out_thing1.str() << std::endl;
+	std::cout << "out_thing2: " << std::endl << out_thing2.str() << std::endl;
+	std::cout << "Made " << out_thing1.copy_count() << " copies for out_thing1 (move_accumulate)" << std::endl;
+	std::cout << "Made " << out_thing2.copy_count() << " copies for out_thing2 (std::accumulate)" << std::endl;
 
 	return 0;
 }
