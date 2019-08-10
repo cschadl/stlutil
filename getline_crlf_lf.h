@@ -11,11 +11,7 @@ namespace stlutil
 
 // Helper template for newline chars
 template <typename char_t>
-struct newline_traits
-{
-	static constexpr char_t cr() = delete;
-	static constexpr char_t lf() = delete;
-};
+struct newline_traits { };
 
 template <>
 struct newline_traits<char>
@@ -45,7 +41,7 @@ std::basic_istream<char_t>& getline_crlf_lf(std::basic_istream<char_t>& is, std:
 	// The sentry object performs various tasks,
 	// such as thread synchronization and updating the stream state.
 
-	typename std::basic_istream<char_t>::sentry se(is, true);
+	typename std::basic_istream<char_t>::sentry se(is, true /* dont skip whitespace */);
 	std::basic_streambuf<char_t>* sb = is.rdbuf();
 
 	for(;;)
