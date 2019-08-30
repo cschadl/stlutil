@@ -9,8 +9,12 @@ class blah
 private:
 	std::array<T, N> m_v;
 public:
-	template<typename...U, 
-				std::enable_if_t<stlutil::conjunction<std::is_convertible<T, U>...>::value, int*> = nullptr>
+	// holy fucking shit
+	// this makes v5 work
+	template<typename...U,
+				std::enable_if_t<	stlutil::conjunction<
+											std::is_reference<U>..., 
+											std::is_same<T, std::decay_t<U>>...>::value, void*> = nullptr>
 	blah(U&& ... args)
 		: m_v{std::forward<U>(args)...}
 	{
@@ -18,12 +22,23 @@ public:
 		static_assert(sizeof...(args) >= N || sizeof...(args)==1, "Too few arguments");
 	}
 
+	// This makes v3, v4 work 
+	template<typename...U, 
+				std::enable_if_t<stlutil::conjunction<std::is_convertible<T, U>...>::value, void*> = nullptr>
+	blah(U&& ... args)
+		: m_v{static_cast<T>(std::forward<U>(args))...}	// the static_cast<T> prevents 'narrowing int -> double' warning
+	{
+		// We'll still get a failure if the # of arguments is > N
+		static_assert(sizeof...(args) >= N || sizeof...(args)==1, "Too few arguments");
+	}
+
+	// SFINAE failed, so look at these constructors
 	blah()
 		: m_v(stlutil::make_array_val<T, N>(T(0)))
 	{
 	}
 
-	explicit blah(blah const&) = default;
+	blah(blah const&) = default;
 
 	T const& operator()(size_t n) const { return m_v[n]; }
 };
@@ -59,6 +74,12 @@ int main()
 	// doesn't apply if the source is a constant expression...
 	blah3d_t v4(1, 2, 3);
 	std::cout << "v4 is (" << v4(0) << ", " << v4(1) << ", " << v4(2) << ")" << std::endl;
+
+	double d1 = 5.2;
+	double d2 = 2.8;
+	double d3 = 1.7;
+	blah3d_t v5(d1, d2, d3);
+	std::cout << "v5 is (" << v5(0) << ", " << v5(1) << ", " << v5(2) << ")" << std::endl;
 
 	return 0;
 }
