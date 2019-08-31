@@ -24,7 +24,9 @@ public:
 
 	// This makes v3, v4 work 
 	template<typename...U, 
-				std::enable_if_t<stlutil::conjunction<std::is_convertible<T, U>...>::value, void*> = nullptr>
+				std::enable_if_t<	stlutil::conjunction<
+										std::is_arithmetic<U>...,
+										std::is_convertible<T, U>...>::value, void*> = nullptr>
 	blah(U&& ... args)
 		: m_v{static_cast<T>(std::forward<U>(args))...}	// the static_cast<T> prevents 'narrowing int -> double' warning
 	{
@@ -80,6 +82,12 @@ int main()
 	double d3 = 1.7;
 	blah3d_t v5(d1, d2, d3);
 	std::cout << "v5 is (" << v5(0) << ", " << v5(1) << ", " << v5(2) << ")" << std::endl;
+
+	double const d4 = d1 * 0.5;
+	double const d5 = d2 * 0.25;
+	double const d6 = d3 * 0.75;
+	blah3d_t v6(d4, d5, d6);
+	blah3d_t v7(d1 + d2, d2 / 3, d3 * d6);
 
 	return 0;
 }
