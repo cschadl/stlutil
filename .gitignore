@@ -1,0 +1,7 @@
+.project
+.cproject
+.settings
+.*.swp
+Release/
+Debug/
+bin/
